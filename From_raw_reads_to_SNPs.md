@@ -119,7 +119,7 @@ In all 3 images below, x axis is the 140 individuals
 
 <img src="https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/images/mapping_stat.png" width="400" />
 
-## ANGSD and PCA
+## ANGSD for PCA
 
 ```bash
 cd /users/c/p/cpetak/WGS/angsd
@@ -208,3 +208,64 @@ PCA of average coverage:
 <img src="https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/images/PCA_cov.png" width="400" />
      
 Again, no clustering is visible.
+
+## ANGSD for SNPs
+
+First, run ANGSD to get bcf file with per site information for each individual from all populations.
+
+
+```bash
+./angsd -b /users/c/p/cpetak/WGS/make_vcf/list_for_angsd.txt \ 
+-ref ${ref} \
+-anc ${ref} \
+-out /users/c/p/cpetak/WGS/make_vcf/all_pop_angsd \
+-nThreads 16 \
+-remove_bads 1 \
+-C 50 \
+-baq 1 \
+-minMapQ 30 \
+-minQ 20 \
+-minInd 119 \
+-setMinDepthInd 3 \
+-skipTriallelic 1 \
+-dobcf 1 \
+-GL 1 \
+-doPost 1 \
+-doCounts 1 \
+-doMajorMinor 1 \
+-doMaf 1 \
+-doSaf 1 \
+-doHWE 1 \
+-SNP_pval 1e-6
+```
+
+-> output of interest: all_pop_angsd.bcf
+
+```bash
+# convert to vcf
+spack load bcftools@1.10.2
+bcftools view all_pop_angsd.bcf > all_pop_angsd.vcf
+# then to add GT info
+vcfglxgt all_pop_angsd.vcf > fixed_all_pop_angsd.vcf
+# then to account for missing information
+sed -i 's/0\/0\:0\,0\,0\:0\,0\,0\:0\,0\,0\:0/NA\:0\,0\,0\:0\,0\,0\:0\,0\,0\:0/g' fixed_all_pop_angsd_copy.vcf
+# then keep only GT information
+awk -v FS="\t" -v OFS="\t" '{for(i=9;i<=NF;i++) {split($i, gt, ":"); $i=gt[1]} print}' fixed_all_pop_angsd_copy.vcf > fixed_all_pop_angsd_copy_onlyGT.vcf
+# getting rid of vcf header
+head -916 fixed_all_pop_angsd_copy_onlyGT.vcf > vcf_head.vcf
+cat fixed_all_pop_angsd_copy_onlyGT.vcf | grep -v "#" > vcf_tail.vcf 
+```
+
+### Filtering for biallelic
+
+```bash
+# getting first column of vcf as chromosome.position
+awk -F "\t" '{print $1$2, $0}' vcf_tail.vcf > vcf_tail_idd2
+# keeping only lines in vcf that are also in list of filtered positions
+awk 'FNR==NR{a[$0];next}($1 in a)' filt_posi_fixed vcf_tail_idd2 > filtered_vcf
+# where filt_posi_fixed is the list of loci after filtering, 1 column, chromosome.position format
+# results in a file that has 991,430 positions (994,220 only MAF filter), because remember here we also filtered for SNP_pval
+```
+
+This is coming from the filtering steps described in [Code for Filtering steps](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/Filtering_steps.md)
+
