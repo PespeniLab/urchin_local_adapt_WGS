@@ -1,10 +1,30 @@
 # Generating allele frequencies and filtering steps
 
-Folders:
+First, I run angsd on each population separately. E.g.
 
-WGS/angsd_new, WGS/angsd_new/pop_split, WGS/angsd_new/my_bayenv/testing_new
+```bash
+./angsd -b /users/c/p/cpetak/WGS/BOD_rmdups_jo.txt 
+-ref /users/c/p/cpetak/WGS/reference_genome/GCF_000002235.5_Spur_5.0_genomic.fna 
+-anc /users/c/p/cpetak/WGS/reference_genome/GCF_000002235.5_Spur_5.0_genomic.fna 
+-out /users/c/p/cpetak/WGS/angsd_new/BOD_angsd_allsites 
+-nThreads 16 
+-remove_bads 1 
+-C 50 
+-baq 1 
+-minMapQ 30 
+-minQ 20 
+-minInd 17 # 85% of 20 individuals
+-setMinDepthInd 3 
+-skipTriallelic 1 
+-GL 1 
+-doCounts 1 
+-doMajorMinor 1 
+-doMaf 1 
+-doSaf 1 
+-doHWE 1
+```
 
-Note: code for angsd that resulted in files in angsd_new and angsd_noout: first step in [Code for Step 6](https://github.com/Cpetak/urchin_adaptation/blob/main/Step6.md)
+For FOG and CAP, I  run the above code without outliers
 
 Since population maf files were very large, I split each maf file into 1,000,000 line chuncks in separate folders inside angsd_new:
 
@@ -28,7 +48,7 @@ while read line ; do
 done < $1
 ```
 
-Once i have all the smaller files named segment in each pop_split folder I do the following:
+Once I have all the smaller files named segment in each pop_split folder I do the following:
 
 ```bash
 #!/bin/sh
@@ -138,8 +158,6 @@ outfile_name = '/users/c/p/cpetak/WGS/angsd_new/my_bayenv/testing_new/' + sys.ar
 merged.to_csv(outfile_name, index=False)
 ```
 
--> final output: 6.csv
-
 NOTE: this way only sites where every pop has information about it is kept!
 
 NOTE: since the output was a directory not a csv, I had to do the following each time:
@@ -219,32 +237,7 @@ new_df.to_csv(outfile_name, index=False)
 
 output after combining split files: merged_processed.csv
 
-then finally transformed it to have a bayenv shape using code in process_final.py
-
-```python
-import pandas as pd
-import numpy as np
-
-new_df=pd.read_csv("merged_processed.csv")
-
-final_df = pd.DataFrame([el for el in new_df["pos"].values for _ in range(2)])
-#final_df = final_df.rename(columns={0: "pos"})
-final_df["LOM"] = [ el for pair in zip(new_df["LOMal1"].values, new_df["LOMal2"].values) for el in pair]
-final_df["SAN"] = [ el for pair in zip(new_df["SANal1"].values, new_df["SANal2"].values) for el in pair]
-final_df["TER"] = [ el for pair in zip(new_df["TERal1"].values, new_df["TERal2"].values) for el in pair]
-final_df["BOD"] = [ el for pair in zip(new_df["BODal1"].values, new_df["BODal2"].values) for el in pair]
-final_df["KIB"] = [ el for pair in zip(new_df["KIBal1"].values, new_df["KIBal2"].values) for el in pair]
-final_df["CAP"] = [ el for pair in zip(new_df["CAPal1"].values, new_df["CAPal2"].values) for el in pair]
-final_df["FOG"] = [ el for pair in zip(new_df["FOGal1"].values, new_df["FOGal2"].values) for el in pair]
-
-final_df.to_csv('/users/c/p/cpetak/WGS/angsd_new/my_bayenv/testing_new/bayenv_withpos2.csv', sep='\t', index=False)
-```
-
-output: bayenv_withpos.csv
-
-no header or pos info: bayenv_final.csv
-
-Then did the same thing but filtered for MAF (process_final_withfilter.py)
+Filtering for MAF (process_final_withfilter.py)
 
 ```python
 import pandas as pd
@@ -252,7 +245,7 @@ import numpy as np
 
 merged=pd.read_csv("merged_processed.csv")
 
-MAF=0.05
+MAF=0.025
 MAC=MAF*274 #because we dropped 3 individuals so 6 chromosomes
 
 columns = ['LOMal1', 'SANal1', 'TERal1', 'BODal1','KIBal1','CAPal1','FOGal1']
@@ -271,24 +264,12 @@ final_df["KIB"] = [ el for pair in zip(merged3["KIBal1"].values, merged3["KIBal2
 final_df["CAP"] = [ el for pair in zip(merged3["CAPal1"].values, merged3["CAPal2"].values) for el in pair]
 final_df["FOG"] = [ el for pair in zip(merged3["FOGal1"].values, merged3["FOGal2"].values) for el in pair]
 
-final_df.to_csv('/users/c/p/cpetak/WGS/angsd_new/my_bayenv/testing_new/bayenv_withpos_005filter.csv', sep='\t', index=False)
+final_df.to_csv('/users/c/p/cpetak/WGS/angsd_new/my_bayenv/testing_new/bayenv_withpos_0025filter.csv', sep='\t', index=False)
 ```
-
-File I am using a bunch in downstream analysis: bayenv_withpos_0025filter.csv
 
 Final number of sites: 994,220
 
-Noouts, biallelic (across all pops, not just per pop), minMAF 0.025, every pop has site information
-
-In order to get covarience matrix based on file above:
-
-```bash
-./bayenv2 -i /users/c/p/cpetak/WGS/angsd_new/my_bayenv/testing_new/bayenv_final_0025filter.csv -p 7 -k 100000 -r 63479 > /users/c/p/cpetak/WGS/angsd_new/my_bayenv/testing_new/run_bayenv_filtered2/matrix.out
-```
-
-I run above code 5 times, as independent replicates. Took last matrix for each (100,000th iteration).
-
-Averaged those 5 matrices and used a Mantel test to compare it with the global pairwise Fst matrix: with 10,000 permutations, p=0.0402, r=0.623. Calculated in: https://colab.research.google.com/drive/1Zb4jjB70rOPS4ike7ySnHs_hk30N_9ff?usp=sharing
+No outliers, biallelic (across all pops, not just per pop), minMAF 0.025, every pop has site information
 
 
 
