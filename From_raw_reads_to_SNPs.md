@@ -269,3 +269,86 @@ awk 'FNR==NR{a[$0];next}($1 in a)' filt_posi_fixed* vcf_tail_idd2 > filtered_vcf
 
 *This is coming from the filtering steps described in [Code for Filtering steps](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/Filtering_steps.md)
 
+## Site frequency spectrums and Fst
+
+First, I run angsd on each population separately. E.g.
+
+```bash
+./angsd -b /users/c/p/cpetak/WGS/BOD_rmdups_jo.txt 
+-ref /users/c/p/cpetak/WGS/reference_genome/GCF_000002235.5_Spur_5.0_genomic.fna 
+-anc /users/c/p/cpetak/WGS/reference_genome/GCF_000002235.5_Spur_5.0_genomic.fna 
+-out /users/c/p/cpetak/WGS/angsd_new/BOD_angsd_allsites 
+-nThreads 16 
+-remove_bads 1 
+-C 50 
+-baq 1 
+-minMapQ 30 
+-minQ 20 
+-minInd 17 # 85% of 20 individuals
+-setMinDepthInd 3 
+-skipTriallelic 1 
+-GL 1 
+-doCounts 1 
+-doMajorMinor 1 
+-doMaf 1 
+-doSaf 1 
+-doHWE 1
+```
+
+For FOG and CAP, I also run the above code without outliers 
+
+Since I have 7 populations, I have 21 possible pairs of populations. For each of the possible pairs:
+
+```bash
+#!/bin/sh
+dir=/users/c/p/cpetak/WGS/angsd_new
+while read line ; do #give this script a list of pop pairs displayed as pop1.pop2
+    pop1=$(cut -d '.' -f1 <<< $line)
+    pop2=$(cut -d '.' -f2 <<< $line)
+    echo $pop1
+    echo $pop2
+    FILE=$(mktemp)
+    cat header.txt >> $FILE
+    echo "cd /users/c/p/cpetak/WGS/angsd/misc" >> $FILE
+    echo "./realSFS ${dir}/${pop1}_angsd_allsites.saf.idx ${dir}/${pop2}_angsd_allsites.saf.idx -P 16 -fold 1 > ${dir}/pairwise_fst/${pop1}_${pop2}_allsites.sfs" >> $FILE #folded option!
+    sbatch $FILE
+    sleep 0.5
+    rm $FILE
+done < $1
+```
+
+For all pairs containing CAP and FOG the angsd output with no outliers was used (from angsd_noout)
+
+Then for each pair (using TER.BOD as an example)
+
+```bash
+cd /users/c/p/cpetak/WGS/angsd/misc
+dir=/users/c/p/cpetak/WGS/angsd_new
+./realSFS fst index ${dir}/TER_angsd_allsites.saf.idx ${dir}/BOD_angsd_allsites.saf.idx -sfs ${dir}/pairwise_fst/TER_BOD_allsites.sfs -fold 1 -fstout ${dir}/pairwise_fst/TER_BOD_allsites -whichFst 1
+```
+
+Finally
+
+```bash
+./realSFS fst print /users/c/p/cpetak/WGS/angsd_new/pairwise_fst/TER_BOD_allsites.fst.idx > /users/c/p/cpetak/WGS/angsd_new/pairwise_fst/TER_BOD_allsites.fst
+```
+
+To filter by MAF 
+
+```bash
+sed s/"\.1"/"\.1,"/g bayenv_onlypos_0025filter.csv* > bayenv_onlypos_temp.csv
+awk -F "," '{print $2"_"$1, $0}' bayenv_onlypos_temp.csv > bayenv_onlypos_temp2.csv
+cut -d' ' -f1 bayenv_onlypos_temp2.csv > bayenv_onlypos_temp3.csv
+# now it is one column, with pos_chr format, rm intermediate temp files and rename to _cleaned
+# repeat with each .fst file too (not exactly as they have different starting format) to match format:
+awk '{print $2"_"$1, $0}' CAP_BOD_allsites.fst # example file
+# then sort each of the fst files along with the bayenv file
+sort -k1 
+# for each fst file
+join -1 1 -2 1 sorted_bayenv_onlypos_cleaned.csv ${pop1}_${pop2}_allsites_cleaned.fst > joined_${pop1}_${pop2}_allsites
+# IMPORTANT! Make sure that the column you are joining on (in this case the first column) has the same format in both files you are joining! E.g. pos_chr. I chose this IDing instead of chr_pos to avoid sorting issues.
+```
+
+*This is coming from the filtering steps described in [Code for Filtering steps](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/Filtering_steps.md)
+
+TODO: global Fst
