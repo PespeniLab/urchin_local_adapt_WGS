@@ -5,3 +5,6 @@ This repository contains all code used to analysed sequence data available on NC
 # Part one: From raw reads to SNPs
 
 [Code for Part 1](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/From_raw_reads_to_SNPs.md)
+
+# Part two: 
+
