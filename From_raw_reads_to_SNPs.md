@@ -351,4 +351,65 @@ join -1 1 -2 1 sorted_bayenv_onlypos_cleaned.csv ${pop1}_${pop2}_allsites_cleane
 
 *This is coming from the filtering steps described in [Code for Filtering steps](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/Filtering_steps.md)
 
-TODO: global Fst
+### Global pairwise Fst
+
+```bash
+./realSFS fst stats ${dir2}/pairwise_fst_cleaned/${pop1}_${pop2}_allsites.fst.idx > ${dir2}/pairwise_fst_cleaned/${pop1}_${pop2}_global.fst
+```
+
+-> output: unweighted and weighted (second preferred) global Fst for each pair. 
+
+### Per-site nucleotide diversity
+
+Calculating sfs for each pop, reusing code from doing it per population pair.
+
+```bash
+./realSFS ${dir}/${line}_angsd_allsites.saf.idx -P 16 -fold 1 > ${dir}/${line}_allsites.sfs
+```
+
+Then, calling saf2theta
+
+```bash
+./realSFS saf2theta ${dir}/${line}_angsd_allsites.saf.idx -sfs ${dir}/${line}_allsites.sfs -outname ${dir}/${line}_thetaout_div
+```
+
+Then, to calculate Tajimas D
+
+```bash
+./thetaStat do_stat ${dir}/${line}_thetaout_div.thetas.idx
+.thetaStat do_stat out.thetas.idx -win 100 -step 100  -outnames theta.thetasWindow.gz
+```
+
+then repeated but with -win 1000 -step 1000 -> eg BOD_1000.thetasWindow.gz.pestPG
+
+### Linkage disequilibrium
+
+```bash
+# PLINK 1.9
+# PLINK v1.90b6.25 64-bit (5 Mar 2022)
+# cp filtered_vcf, rename as temp_vcf
+cut -d" " -f2 temp_vcf > proc_temp_vcf
+sed -i 's/_//g' vcf_header_temp
+tail -10000 proc_temp_vcf > temp_vcf2 # downsample as it is too big
+cat vcf_header_temp temp_vcf2 > temp_vcf_ready
+sed -i 's/NA/./g' temp_vcf_ready
+
+# LD decay
+head -500 temp_vcf_ready > vcf_input # they were all on the same chromosome, NW_022145612.1
+./plink --vcf vcf_input --recode --allow-extra-chr --out temp_vcf_plink #now we have pad and map
+./plink --file temp_vcf_plink --make-bed --allow-extra-chr --out afterQC
+# adjust the number of SNPs and inter-SNP distances for which you want to compute LD
+./plink --bfile afterQC --r2 --allow-extra-chr --ld-window-r2 0 --ld-window 10000 --ld-window-kb 500000 --out resultLD
+
+# Create heatmap
+./plink --bfile afterQC --r2 square --allow-extra-chr --out resultLD_heat
+awk -F "\t" '{print $2}' vcf_input > locs_info
+
+# LD pruning
+cat vcf_header_temp proc_temp_vcf > temp_vcf_ready # no downsampling this time
+sed -i 's/NA/./g' temp_vcf_ready
+./plink --vcf temp_vcf_ready --recode --allow-extra-chr --out temp_vcf_plink
+./plink --file temp_vcf_plink --make-bed --allow-extra-chr --set-missing-var-ids @:#[b37]\$1,\$2 --out afterQC # my SNPs didn't have IDs
+./plink --bfile afterQC --allow-extra-chr --indep-pairwise 50 5 0.5 
+```
+
