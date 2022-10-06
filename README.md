@@ -8,5 +8,5 @@ This repository contains all code used to analysed sequence data available on NC
 
 # Part two: Identification of pH variability associated SNPs
 
-
+[Code for Part 2](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/pH_associated_SNPs.md)
 
