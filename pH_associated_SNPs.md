@@ -116,7 +116,7 @@ Line plot
 
 Dot plot
 
-<img src="https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/images/dots_7pop.jpg" width="400" />
+<img src="https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/images/dots_2pop.jpg" width="400" />
 
 This is just meant to show how for low He SNPs Fst is inflated. SNPs for which He < 0.1 were removed in outlier calculations (OutFlank function, default). Note how there aren't any positions He < 0.05, as there sites were filtered out already.
 
