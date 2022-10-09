@@ -348,9 +348,3 @@ lfdr <- qobj$lfdr
 
 summary(qobj)
 ```
-
-
-
-## Analysis of outlier loci
-
-separate?
