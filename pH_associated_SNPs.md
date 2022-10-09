@@ -258,9 +258,96 @@ awk -F "," ' $6 >= 0.0260773276575 ' subbed.csv > pair_fst_outs
 
 Number of outliers here: 9,780
 
+## LFMM2
 
+Converted filtered_vcf (as described before) into LFMM format after removing CAP and FOG outliers:
 
+```bash
+# take out first 10 columns - info about position, and columns 31, 57, 58 which are the outlier individuals
+cut --complement -d$'\t' -f1,2,3,4,5,6,7,8,9,30,56,57 filtered_vcf > cut_filtered_vcf
+# since file is very big I transposed it using python -> num rows=137, num cols=991,430
+with open("cut_filtered_vcf") as f:
+    raw = f.readlines()
+    data = [el.strip().replace("\n","").split("\t") for el in raw]
 
+def get_col(i,data):
+    return [el[i] for el in data]
+
+with open("cut_filtered_vcf_t","w") as f:
+    for i in range(len(data[0])):
+        f.write(" ".join(get_col(i,data))+"\n")
+# make into LFMM format
+sed 's/0\/0/0/g' cut_filtered_vcf_t | sed 's/0\/1/1/g' | sed 's/1\/0/1/g' | sed 's/1\/1/2/g' | sed 's/\.\/\./9/g' > lfmm_input # 's/NA/9/g' for non-pruned
+```
+
+Running LFMM: Getting K based on principal components
+
+```R
+#devtools::install_github("bcm-uga/lfmm")
+library(lfmm)
+library(tseries)
+
+mydata<-read.matrix("lfmm_input", header = FALSE, sep = " ", skip = 0)
+
+# get genotype data, columns are positions, rows are individuals
+Y <- mydata
+
+#principal component analysis (PCA) can reveal some ‘structure’ in the genotypic data. 
+#We perfom PCA by using the prcomp function as follows.
+pc <- prcomp(Y)
+pdf(file = "PCA.pdf")
+plot(pc$sdev[1:20]^2, xlab = 'PC', ylab = "Variance explained")
+points(6,pc$sdev[6]^2, type = "h", lwd = 3, col = "blue")
+dev.off()
+
+#Based on resulting plot, we are using K=1, no population structure
+```
+
+Getting p-values
+
+```R
+library(lfmm)
+library(tseries)
+
+Y<-read.matrix("lfmm_input", header = FALSE, sep = " ", skip = 0)
+
+#order of vcf: BOD,CAP,FOG,KIB,LOM,SAN,TER
+BOD <- rep(1, each=20)
+CAP <- rep(1, each=19)
+FOG <- rep(1, each=18)
+rest <- rep(c(0,0,0,0), each=20)
+X <- c(BOD, CAP, FOG, rest)
+
+mod.lfmm <- lfmm_ridge(Y = Y, 
+                       X = X, 
+                       K = 1)
+
+## performs association testing using the fitted model:
+pv <- lfmm_test(Y = Y, 
+                X = X, 
+                lfmm = mod.lfmm, 
+                calibrate = "gif")
+
+pvalues <- pv$calibrated.pvalue 
+write.csv(pvalues,"LFMM_ridge_pvalues.csv")
+print("created csv with p-vals")
+```
+
+Correction of multiple testing:
+
+```R
+library(qvalue)
+results<-read.csv(file="LFMM_ridge_pvalues.csv", header=TRUE)
+
+pvalues<-results$V1
+
+qobj <- qvalue(p = pvalues)
+qvalues <- qobj$qvalues
+pi0 <- qobj$pi0
+lfdr <- qobj$lfdr
+
+summary(qobj)
+```
 
 
 
