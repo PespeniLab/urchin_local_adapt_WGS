@@ -18,7 +18,7 @@ for l in locs:
   if l[0] in SPU_LOC:
     ss=SPU_LOC[l[0]]
     for s in ss:
-      new_list.append(s)
+      new_list.append(s) # keeping only 1 SPU for each LOC doesn't influence results!
   else:
     not_found.append(l[0])
 
