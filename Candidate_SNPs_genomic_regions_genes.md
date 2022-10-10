@@ -50,7 +50,7 @@ Chi-squared was run in 3 different ways: one where hits in overlapping regions w
 
 ## Gene expression
 
-
+Code for analysing expression data is [here.](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/code/expression_data_anal.ipynb) 
 
 ## Protein-protein interaction network
 
