@@ -48,13 +48,34 @@ To get the total number of promoter nucleotides (for expected number of hits in 
 
 Chi-squared was run in 3 different ways: one where hits in overlapping regions was counted multiple times, one where hits in overlapping regions were discarded, and one where hits in overlapping regions was counted once, as one of the regions selected at random. Results of the 3 methods were extremely similar as there were not many hits in overlapping regions.
 
+## ----------------------------
+
 ## Gene expression
+
+To get the list of LOC: [get_loc_lists.py](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/code/get_loc_lists.py), takes gathered_annotation.csv, returns 3 files: LOC for promoters, LOC for non-promoters, LOC for all together. 
 
 Code for analysing expression data is [here.](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/code/expression_data_anal.ipynb) 
 
 ## Protein-protein interaction network
 
+To get the list of SPUs: Converted LOC (the ones in the list above) to SPU using the GenePageGeneralInfo_AllGenes.txt file available on the echinobase. Code to make a mapping between LOC and SPU based on above file: [make_dic.py](https://github.com/Cpetak/urchin_adaptation/blob/main/code/make_dic.py) -> SPU_LOC.json. Then I used this dictionary to map my LOCs to SPUs ([get_spu_list.py](https://github.com/Cpetak/urchin_adaptation/blob/main/code/get_spu_list.py)). 
 
+Code for analysing protein-protein interaction data (as well as to compare to previously published datasets such as the list of biomineralisation genes) is [here.](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/code/anal_outlier_genes.ipynb) 
+
+Reference for previously published datasets:
+
+- Biomineralisation genes: from https://pubmed.ncbi.nlm.nih.gov/28141889/, mel_biomin.csv
+- Differentially expressed genes:
+  - South vs North after common garden conditions, https://onlinelibrary.wiley.com/doi/full/10.1111/evo.12036, N_S_diff_expressed.csv
+  - Expression of genes of different populations in response to low pH, https://pubmed.ncbi.nlm.nih.gov/28141889
+    - Genes differentially expressed between S. purpuratus populations following one day of exposure to low pH seawater, genes up-regulated in populations most frequently exposed to ph <7.8 & down-regulated in populations less frequently exposed to ph <7.8, (DE_1.csv), genes down-regulated in populations most frequently exposed to  ph <7.8 & up-regulated in populations less frequently exposed to ph <7.8 (DE_2.csv)
+    - Genes differentially expressed between S. purpuratus populations following seven days of exposure to low pH seawater, genes up-regulated in populations most frequently exposed to ph  <7.8 & down-regulated in populations less frequently exposed to ph <7.8 (DE_3.csv), genes down-regulated in populations most frequently exposed to  ph <7.8 & up-regulated in populations less frequently exposed to ph  <7.8, (DE_4)
+  - Review paper gathering all genes differentially expressed in low pH, https://pubmed.ncbi.nlm.nih.gov/25070868/, all_diff_expressed.csv
+- Genes shown to be related to ph (i.e. SNPs correlated to pH conditions of pops), https://academic.oup.com/icb/article/53/5/857/733987, related_to_ph_snp.csv
+- Artificial selection low vs normal pH, 1 vs 7 days, allele frequencies that changed, https://www.pnas.org/content/110/17/6937, 1_7_days_alleles.csv
+- Genes shown to be related to ph (i.e. SNPs correlated to pH conditions during artificial selection), https://www.biorxiv.org/content/10.1101/422261v1, sig_pH75_onlySPU.txt and sig_pH80_onlySPU.txt
+- mRNA restricted to the PMC lineage, https://pubmed.ncbi.nlm.nih.gov/22190640/, PMC_enriched.csv
+- mRNA enriched in the PMC lineage, https://pubmed.ncbi.nlm.nih.gov/22190640/, PMC_restricted.csv
 
 ## GO enrichment
 
@@ -70,7 +91,7 @@ awk 'BEGIN{FS="\t"} {for(i=2; i<=NF; i++) { if (!a[$1]) a[$1]=$1FS$i ;else a[$1]
 
 Now that I have all genes with associated GO terms, I need to map **LOC IDs into UniprotIDs** to get my list of interesting genes I can use in the GO enrichment together with the gene to GO mapping file above: 
 
-To get the list of LOC: [get_loc_lists.py](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/code/get_loc_lists.py), takes gathered_annotation.csv, returns 3 files: LOC for promoters, LOC for non-promoters, LOC for all together. 
+
 
 I can convert LOC to UniprotID using this tool: https://www.uniprot.org/uploadlists/. select From Ensemble Genomes To uniprot.
 
@@ -102,34 +123,6 @@ allRes <- GenTable(GOdata, classicFisher = resultFisher, topNodes = 10) # top 10
 #showSigOfNodes(GOdata, score(resultFisher), firstSigNodes = 10, useInfo = 'all') 
 
 ```
-
-
-
-___HERE___
-
-### SPU for supplementary data analysis
-
-Converted LOC (the ones in the list above, used for GO) to SPU using the GenePageGeneralInfo_AllGenes.txt file available on the echinobase. Code to make a mapping between LOC and SPU based on above file: [make_dic.py](https://github.com/Cpetak/urchin_adaptation/blob/main/code/make_dic.py) -> SPU_LOC.json Then I used this dictionary to map my LOCs to SPUs ([get_spu_list.py](https://github.com/Cpetak/urchin_adaptation/blob/main/code/get_spu_list.py)). In the case where muliple SPUs are associated to a LOC -> I kept all alternative SPUs as here I am just looking if I found a pos in a gene that is in any of the lists below. 
-
-#### Finding interesting genes:
-
-- Biomineralisation genes: from https://pubmed.ncbi.nlm.nih.gov/28141889/, mel_biomin.csv
-- Differentially expressed genes:
-  - South vs North after common garden conditions, https://onlinelibrary.wiley.com/doi/full/10.1111/evo.12036, N_S_diff_expressed.csv
-  - Expression of genes of different populations in response to low pH, https://pubmed.ncbi.nlm.nih.gov/28141889
-    - Genes differentially expressed between S. purpuratus populations following one day of exposure to low pH seawater, genes up-regulated in populations most frequently exposed to ph <7.8 & down-regulated in populations less frequently exposed to ph <7.8, (DE_1.csv), genes down-regulated in populations most frequently exposed to  ph <7.8 & up-regulated in populations less frequently exposed to ph <7.8 (DE_2.csv)
-    - Genes differentially expressed between S. purpuratus populations following seven days of exposure to low pH seawater, genes up-regulated in populations most frequently exposed to ph  <7.8 & down-regulated in populations less frequently exposed to ph <7.8 (DE_3.csv), genes down-regulated in populations most frequently exposed to  ph <7.8 & up-regulated in populations less frequently exposed to ph  <7.8, (DE_4)
-  - Review paper gathering all genes differentially expressed in low pH, https://pubmed.ncbi.nlm.nih.gov/25070868/, all_diff_expressed.csv
-- Genes shown to be related to ph (i.e. SNPs correlated to pH conditions of pops), https://academic.oup.com/icb/article/53/5/857/733987, related_to_ph_snp.csv
-- Artificial selection low vs normal pH, 1 vs 7 days, allele frequencies that changed, https://www.pnas.org/content/110/17/6937, 1_7_days_alleles.csv
-- Genes shown to be related to ph (i.e. SNPs correlated to pH conditions during artificial selection), https://www.biorxiv.org/content/10.1101/422261v1, sig_pH75_onlySPU.txt and sig_pH80_onlySPU.txt
-- mRNA restricted to the PMC lineage, https://pubmed.ncbi.nlm.nih.gov/22190640/, PMC_enriched.csv
-- mRNA enriched in the PMC lineage, https://pubmed.ncbi.nlm.nih.gov/22190640/, PMC_restricted.csv
-- Important genes (in GRN or master TF): TODO
-
-Note: if I want to look for specifically TFs or things involved in ion homeostasis -> search based on GO term
-
-
 
 ## Dendrogram for biomineralisation genes
 
