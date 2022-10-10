@@ -10,3 +10,6 @@ This repository contains all code used to analysed sequence data available on NC
 
 [Code for Part 2](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/pH_associated_SNPs.md)
 
+# Part three: From candidate SNPs to genomic regions and genes
+
+[Code for Part 3](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/Candidate_SNPs_genomic_regions_genes.md)
