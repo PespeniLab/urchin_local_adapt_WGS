@@ -2,6 +2,8 @@
 
 This repository contains all code used to analysed sequence data available on NCBI for this project. For any questions: cpetak@uvm.edu.
 
+Code, data and images organised into folders in this repo are referenced in the relevant markdown files below (part 1-3).
+
 # Part one: From raw reads to SNPs
 
 [Code for Part 1](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/From_raw_reads_to_SNPs.md)
