@@ -89,13 +89,7 @@ sed '$!N; /^\(.*\)\n\1$/!P; D' temp_mapping > temp2_mapping # It deletes duplica
 awk 'BEGIN{FS="\t"} {for(i=2; i<=NF; i++) { if (!a[$1]) a[$1]=$1FS$i ;else a[$1]=a[$1]","$i};if ($1 != old) b[j++] = a[old];old=$1 } END{for (i=0; i<j; i++) print b[i] }' temp2_mapping > GO_mapping_topGO #it collapses repeated lines into 1, comma separated, output file is in this git repo
 ```
 
-Now that I have all genes with associated GO terms, I need to map **LOC IDs into UniprotIDs** to get my list of interesting genes I can use in the GO enrichment together with the gene to GO mapping file above: 
-
-
-
-I can convert LOC to UniprotID using this tool: https://www.uniprot.org/uploadlists/. select From Ensemble Genomes To uniprot.
-
-Code [LOC2Uniprot.ipynb](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/code/LOC2Uniprot.ipynb) to resolve cases where one LOC mapped to multiple UniprotIDs. Since most UniprotIDs sharing a single LOC mapped to the same GO terms, I just ended up selecting the the UniprotID with the most GO terms. -> list of uniprotIDs of interest, uniprotID_all_locs.txt
+Now that I have all genes with associated GO terms, I need to map LOC IDs into UniprotIDs to get my list of interesting genes I can use in the GO enrichment together with the gene to GO mapping file above. I can convert LOC to UniprotID using this tool: https://www.uniprot.org/uploadlists/. select From Ensemble Genomes To uniprot. Code [LOC2Uniprot.ipynb](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/code/LOC2Uniprot.ipynb) to resolve cases where one LOC mapped to multiple UniprotIDs. Since most UniprotIDs sharing a single LOC mapped to the same GO terms, I just ended up selecting the the UniprotID with the most GO terms.
 
 Using the the two key files above, I run topgo using the following code:
 
