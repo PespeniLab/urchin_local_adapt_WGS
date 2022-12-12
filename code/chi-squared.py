@@ -5,10 +5,10 @@ import numpy as np
 def do_chi(all_hit, tot):
   #calculated based on https://www.ncbi.nlm.nih.gov/genome/annotation_euk/Strongylocentrotus_purpuratus/102/
   #count x mean length (bp)
-  bp_exon=245575 * 335 # double checked
-  bp_3UTR=40771628 # double checked
-  bp_5UTR=10192907 # double checked
-  bp_intron=218005 * 1808 # double checked
+  bp_exon=245575 * 335
+  bp_3UTR=40771628
+  bp_5UTR=10192907
+  bp_intron=218005 * 1808
   bp_lnc_paper=17703544 # number of basepairs (no double counting due to overlaps) from paper
   bp_lnc_ncbi=4850968 #only from ncbi
   bp_lnc=bp_lnc_paper + bp_lnc_ncbi

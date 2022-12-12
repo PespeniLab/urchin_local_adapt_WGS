@@ -32,13 +32,13 @@ Regulatory regions from the literature:
 * Enhancer RNA dataset: Khor, J. M., Guerrero-Santoro, J., Douglas, W., & Ettensohn, C. A.  (2021). Global patterns of enhancer activity during sea urchin  embryogenesis assessed by eRNA profiling. *Genome Research*, *31*(9), 1680-1692.
 * lncRNA: Hezroni, H., Koppstein, D., Schwartz, M. G., Avrutin, A., Bartel, D. P., & Ulitsky, I. (2015). Principles of long noncoding RNA evolution  derived from direct comparison of transcriptomes in 17 species. *Cell reports*, *11*(7), 1110-1122.
 
-For the above, some files contained overlaps between regions within the same file, I resolved these using the check_overlap_within_df.py.
+For the above, some files contained overlaps between regions within the same file, I resolved these using the code/check_overlap_within_df.py.
 
 Then, the files above along with the input_for_extra_regannot_notannot_3.1.csv file were the input to the [annot_reg_regions.py](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/code/annot_reg_regions.py) program. -> output list of positions that fell in an lncRNA region, and another list of positions that fell in any of the regulatory regions instead (ATAC, Chip, L.var, etc.).
 
 #### Putting it together for final analysis
 
-Chi-squared analysis was run as shown in chi-squared.py. It takes gathered_annotation.csv (output of gather_annot_info.py), lncdf.csv and reg_regions_withconfidence.csv (output of annot_reg_regions.py). 
+Chi-squared analysis was run as shown in code/chi-squared.py. It takes gathered_annotation.csv (output of gather_annot_info.py), lncdf.csv and reg_regions_withconfidence.csv (output of annot_reg_regions.py). 
 
 To get the total number of lncRNA nucleotides (for expected number of hits in chi-squared): overlap processed with check_overlap_within_df.py, then gff annotation (processed with filtering_annotation_forlist.py to account for promoters) was subtracted with take_out_gff_from_lncrna.py. Note: sp4.lncRNAs_overlap_processed.csv was first converted from 3.1 to 5.0. Then, each region's length was calculated and summed, together with the number of nucleotides for lncRNA in ncbi. Final number (for paper lncRNA): 17,703,544, if promoter 5000: 15,343,573.
 
@@ -58,7 +58,7 @@ Code for analysing expression data is [here.](https://github.com/PespeniLab/urch
 
 ## Protein-protein interaction network
 
-To get the list of SPUs: Converted LOC (the ones in the list above) to SPU using the GenePageGeneralInfo_AllGenes.txt file available on the echinobase. Code to make a mapping between LOC and SPU based on above file: [make_dic.py](https://github.com/Cpetak/urchin_adaptation/blob/main/code/make_dic.py) -> SPU_LOC.json. Then I used this dictionary to map my LOCs to SPUs ([get_spu_list.py](https://github.com/Cpetak/urchin_adaptation/blob/main/code/get_spu_list.py)). 
+To get the list of SPUs: Converted LOC (the ones in the list above) to SPU using the GenePageGeneralInfo_AllGenes.txt file available on the https://www.echinobase.org. Code to make a mapping between LOC and SPU based on above file: [make_dic.py](https://github.com/Cpetak/urchin_adaptation/blob/main/code/make_dic.py) -> SPU_LOC.json. Then I used this dictionary to map my LOCs to SPUs ([get_spu_list.py](https://github.com/Cpetak/urchin_adaptation/blob/main/code/get_spu_list.py)). 
 
 Code for analysing protein-protein interaction data (as well as to compare to previously published datasets such as the list of biomineralisation genes) is [here.](https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/code/anal_outlier_genes.ipynb) 
 
@@ -120,3 +120,8 @@ allRes <- GenTable(GOdata, classicFisher = resultFisher, topNodes = 10) # top 10
 
 ## Dendrogram for biomineralisation genes
 
+First, raw data was processed by running code/process_raw_files.py. It takes the annotation file from NCBI, the length information of the chromosomes, the position information of the SNPs, and the genotype information of all individuals in the LFMM format.
+
+Then, I run code/pairwise_matrix.py to get pairwise matrix plot for all ~900,000 positions. Output:
+
+<img src="https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/images/all_pairwise.png" width="400" />
