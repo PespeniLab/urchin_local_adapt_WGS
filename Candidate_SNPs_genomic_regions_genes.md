@@ -125,3 +125,32 @@ First, raw data was processed by running code/process_raw_files.py. It takes the
 Then, I run code/pairwise_matrix.py to get pairwise matrix plot for all ~900,000 positions. Output:
 
 <img src="https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/images/all_pairwise.png" width="400" />
+
+NOTE: again, no clustering by population, if there was any population structure, there would be 20 by 20 squares along the diagonal. 
+
+Same process was repeated but this time only considering loci that fall in gene bodies. See code/pairwise_matrix_onlygene.py. Resulting plot very similar to above!
+
+<img src="https://github.com/PespeniLab/urchin_local_adapt_WGS/blob/main/images/onlygene_pairwise.png" width="400" />
+
+Finally, above process was repeated but only with SNPs that fall in biomineralisation genes. 
+
+```python
+file=open("locs_mel_biomin.txt","r")
+c=file.read()
+locs=c.split("\n")
+
+#####################
+
+### Keeping only biomineralisation genes in pos_in_genes
+
+for p in range(len(pos_in_genes)):
+	if len(pos_in_genes[p])>0:
+		new_els=[]
+		for i in pos_in_genes[p]:
+			if i in locs:
+				new_els.append(i)
+		pos_in_genes[p] = new_els
+```
+
+Generated pairwise distance matrix was averaged for each population (eg distance between BOD and SAN was computed as the average of pairwise distances between all BOD and SAN individuals) and then used as an input to MEGA11 (Molecular Evolutionary Genetics Analysis, version 11.0.11, https://www.megasoftware.net/) to build a phylogenic tree using the neighbor-joining algorithm (default settings). 
+
