@@ -2,6 +2,10 @@
 
 This repository contains all code used to analysed sequence data available on NCBI for this project. For any questions: cpetak@uvm.edu.
 
+Data available at: https://www.ncbi.nlm.nih.gov/sra/PRJNA674711
+
+BioProject: PRJNA674711
+
 Code, data and images organised into folders in this repo are referenced in the relevant markdown files below (part 1-3).
 
 # Part one: From raw reads to SNPs
