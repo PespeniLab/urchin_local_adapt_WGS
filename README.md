@@ -6,6 +6,8 @@ Data available at: https://www.ncbi.nlm.nih.gov/sra/PRJNA674711
 
 BioProject: PRJNA674711
 
+DOI for this code: [![DOI](https://zenodo.org/badge/542644288.svg)](https://zenodo.org/badge/latestdoi/542644288)
+
 Code, data and images organised into folders in this repo are referenced in the relevant markdown files below (part 1-3).
 
 # Part one: From raw reads to SNPs
